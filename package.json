@@ -5,7 +5,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"topic-template": "dist/index.js"
+		"topic-template": "./dist/index.js"
 	},
 	"scripts": {
 		"build": "tsup",
