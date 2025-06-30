@@ -5,17 +5,14 @@ CSV から TopicFlow テンプレートを生成するCLIツール
 ## インストール
 
 ```bash
-# npm
-npm install -g @salescore-inc/topic-template
-
 # または npx で直接実行
-npx @salescore-inc/topic-template
+npx topic-template
 ```
 
 ## 使い方
 
 ```bash
-topic-template <input.csv> <output.json> <name> <description> [category]
+npx topic-template <input.csv> <output.json> <name> <description> [category]
 ```
 
 ### 引数
@@ -29,7 +26,7 @@ topic-template <input.csv> <output.json> <name> <description> [category]
 ### 例
 
 ```bash
-topic-template input.csv output.json "採用テンプレート" "採用プロセス用のニーズマップテンプレート" "recruitment"
+npx topic-template input.csv output.json "採用テンプレート" "採用プロセス用のニーズマップテンプレート" "recruitment"
 ```
 
 ## CSV フォーマット
