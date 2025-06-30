@@ -12,8 +12,16 @@
 		"dev": "tsup --watch"
 	},
 	"keywords": ["topicflow", "template", "csv", "converter"],
-	"author": "",
+	"author": "Salescore Inc.",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/salescore-inc/topic-template.git"
+	},
+	"bugs": {
+		"url": "https://github.com/salescore-inc/topic-template/issues"
+	},
+	"homepage": "https://github.com/salescore-inc/topic-template#readme",
 	"devDependencies": {
 		"@types/node": "^24.0.7",
 		"tsup": "^8.5.0",
