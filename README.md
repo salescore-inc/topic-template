@@ -1,4 +1,4 @@
-# @salescore-inc/topic-template
+# topic-template
 
 CSV から TopicFlow テンプレートを生成するCLIツール
 
@@ -6,10 +6,10 @@ CSV から TopicFlow テンプレートを生成するCLIツール
 
 ```bash
 # npm
-npm install -g @salescore-inc/topic-template
+npm install -g topic-template
 
 # または npx で直接実行
-npx @salescore-inc/topic-template
+npx topic-template
 ```
 
 ## 使い方
