@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+
+/**
+ * topic-template CLI
+ * ------------------
+ * CSV → JSON(Template) 変換CLIツール
+ *
+ * ## 使い方
+ *   # グローバルインストール
+ *   $ npm install -g topic-template
+ *   $ topic-template input.csv output.json "Template Name" "Template Description"
+ *
+ *   # npxで直接実行
+ *   $ npx topic-template input.csv output.json "Template Name" "Template Description"
+ *
+ * ### CSV の想定カラム
+ * | phase | section | topic | extractionPrompt |
+ * |-------|---------|-------|------------------|
+ * phase            … 大カテゴリ（課題-1 など）
+ * section          … 中カテゴリ（母集団形成 など）
+ * topic            … 小カテゴリ（接点済人数 など）
+ * extractionPrompt … 判定条件や定義
+ *
+ * phase / section が新たに出現した順に index を採番し、
+ * 既出の組合せには同じ index を再利用します。
+ */
+
+import fs from "fs";
+import path from "path";
+import { randomUUID } from "crypto";
+import { parse } from "csv-parse/sync";
+import { Phase, Section, Topic, Template } from "./types";
+
+// --------------------------------------------------
+// ユーティリティ
+// --------------------------------------------------
+
+/** UUIDを生成する関数 (RFC4122 v4準拠) */
+function generateUUID(): string {
+  return randomUUID();
+}
+
+/** パステルカラーをカテゴリごとに割り当てる簡易ジェネレータ */
+function colorByIndex(i: number): string {
+  const palette = [
+    "#4287f5",
+    "#3db063",
+    "#f5a742",
+    "#f54242",
+    "#9c42f5",
+    "#42c5f5",
+    "#e67e22",
+    "#7a7a7a",
+  ];
+  return palette[i % palette.length];
+}
+
+// --------------------------------------------------
+// メインロジック
+// --------------------------------------------------
+
+function convert(csvFile: string, name: string, description: string, category: string = "general"): Template {
+  const csv = fs.readFileSync(csvFile, "utf8");
+  const records: Record<string, string>[] = parse(csv, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  });
+
+  // フェーズ / セクション / トピック を順にマッピング
+  const phaseMap = new Map<string, Phase>();
+  const sectionMap = new Map<string, Section[]>();
+  const topics: Topic[] = [];
+
+  let topicIndex = 1;
+
+  for (const rec of records) {
+    const phaseId = rec.phase;
+    const sectionId = rec.section;
+    const topicId = rec.topic;
+
+    // ---- フェーズ登録 ----
+    if (!phaseMap.has(phaseId)) {
+      const phase: Phase = {
+        id: phaseId,
+        name: phaseId,
+        description: "",
+        color: colorByIndex(phaseMap.size),
+      };
+      phaseMap.set(phaseId, phase);
+    }
+
+    // ---- セクション登録 ----
+    if (!sectionMap.has(phaseId)) sectionMap.set(phaseId, []);
+    const secArray = sectionMap.get(phaseId)!;
+    if (!secArray.find((s) => s.id === sectionId)) {
+      const section: Section = {
+        id: sectionId,
+        name: sectionId,
+        description: "",
+        phaseId,
+        index: secArray.length + 1,
+      };
+      secArray.push(section);
+    }
+
+    // ---- トピック登録 ----
+    const topic: Topic = {
+      id: topicId,
+      title: topicId,
+      phaseId,
+      sectionId,
+      extractionPrompt: rec.extractionPrompt || "",
+      status: "pending",
+      error: null,
+      index: topicIndex++,
+    };
+    topics.push(topic);
+  }
+
+  // フェーズごとに sections をフラット化し順序保証
+  const sections: Section[] = [];
+  for (const phase of phaseMap.values()) {
+    const list = sectionMap.get(phase.id) || [];
+    sections.push(...list);
+  }
+
+  // ---- テンプレート生成 ----
+  const template: Template = {
+    id: generateUUID(),
+    name,
+    description,
+    category,
+    phases: Array.from(phaseMap.values()),
+    sections,
+    topics,
+    relations: [],
+    reasonings: [],
+  };
+
+  return template;
+}
+
+// --------------------------------------------------
+// エントリポイント
+// --------------------------------------------------
+
+function main(): void {
+  const [input, output, name, description, category] = process.argv.slice(2);
+  if (!input || !output || !name || !description) {
+    console.error("Usage: topic-template <input.csv> <output.json> <name> <description> [category]");
+    console.error("Example: topic-template input.csv output.json \"採用テンプレート\" \"採用プロセス用のニーズマップテンプレート\" \"recruitment\"");
+    process.exit(1);
+  }
+
+  const absIn = path.resolve(input);
+  const absOut = path.resolve(output);
+
+  const tpl = convert(absIn, name, description, category);
+  fs.writeFileSync(absOut, JSON.stringify(tpl, null, 2), "utf8");
+
+  console.log(`✓ Template JSON written to ${absOut}`);
+  console.log(`  ID: ${tpl.id}`);
+  console.log(`  Name: ${tpl.name}`);
+  console.log(`  Description: ${tpl.description}`);
+  console.log(`  Category: ${tpl.category}`);
+  console.log(`  Phases: ${tpl.phases.length}`);
+  console.log(`  Sections: ${tpl.sections.length}`);
+  console.log(`  Topics: ${tpl.topics.length}`);
+}
+
+if (require.main === module) main();
