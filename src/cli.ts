@@ -28,7 +28,7 @@
 
 import fs from "fs";
 import path from "path";
-import { convertCsvToTemplate } from "./index";
+import { convertCsvStringToTemplate } from "./index";
 
 function main(): void {
   const [input, output, name, description, category] = process.argv.slice(2);
@@ -41,7 +41,9 @@ function main(): void {
   const absIn = path.resolve(input);
   const absOut = path.resolve(output);
 
-  const tpl = convertCsvToTemplate(absIn, name, description, category);
+  // CSVファイルを読み込み
+  const csvContent = fs.readFileSync(absIn, "utf8");
+  const tpl = convertCsvStringToTemplate(csvContent, name, description, category);
   fs.writeFileSync(absOut, JSON.stringify(tpl, null, 2), "utf8");
 
   console.log(`✓ Template JSON written to ${absOut}`);
