@@ -52,3 +52,6 @@ Thumbs.db
 # Output files (for testing)
 output.json
 *.output.json
+
+*.csv
+out.json
