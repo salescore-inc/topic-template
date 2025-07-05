@@ -1,14 +1,27 @@
 import { defineConfig } from "tsup";
 
-export default defineConfig({
-  entry: ["src/index.ts"],
-  format: ["cjs"],          // Node.js CLIツールはCJSのみで十分
-  target: "node20",         // 実行環境
-  outDir: "dist",
-  splitting: false,         // 1 ファイルにまとめる
-  sourcemap: true,
-  clean: true,
-  dts: true,                // 型定義ファイル (*.d.ts) も生成
-  bundle: true,             // 依存関係をバンドル
-  noExternal: ["csv-parse"] // csv-parseをバンドルに含める
-});
+export default defineConfig([
+  {
+    entry: ["src/index.ts"],
+    format: ["cjs", "esm"],
+    target: "node20",
+    outDir: "dist",
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    dts: true,
+    bundle: true,
+    noExternal: ["csv-parse"]
+  },
+  {
+    entry: ["src/cli.ts"],
+    format: ["cjs"],
+    target: "node20",
+    outDir: "dist",
+    splitting: false,
+    sourcemap: true,
+    dts: false,
+    bundle: true,
+    noExternal: ["csv-parse"]
+  }
+]);

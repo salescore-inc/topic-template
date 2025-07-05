@@ -5,7 +5,14 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"topic-template": "./dist/index.js"
+		"topic-template": "./dist/cli.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
+		}
 	},
 	"scripts": {
 		"build": "tsup",
