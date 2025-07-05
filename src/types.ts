@@ -39,6 +39,7 @@ export interface Topic {
   status: "pending";
   error: null;
   index: number;
+  tags: string[];
 }
 
 /**
@@ -55,4 +56,5 @@ export interface Template {
   topics: Topic[];
   relations: never[];
   reasonings: never[];
+  tags: string[];
 }

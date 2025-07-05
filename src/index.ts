@@ -14,8 +14,9 @@
  *   $ npx topic-template input.csv output.json "Template Name" "Template Description"
  *
  * ### CSV の想定カラム
- * | phase | section | topic | extractionPrompt |
- * |-------|---------|-------|------------------|
+ * | tag | phase | section | topic | extractionPrompt |
+ * |-----|-------|---------|-------|------------------|
+ * tag              … タグ（IS・キャリア エントリー など）
  * phase            … 大カテゴリ（課題-1 など）
  * section          … 中カテゴリ（母集団形成 など）
  * topic            … 小カテゴリ（接点済人数 など）
@@ -70,11 +71,13 @@ function convert(csvFile: string, name: string, description: string, category: s
   // フェーズ / セクション / トピック を順にマッピング
   const phaseMap = new Map<string, Phase>();
   const sectionMap = new Map<string, Section[]>();
-  const topics: Topic[] = [];
+  const topicMap = new Map<string, Topic>();
+  const allTags = new Set<string>();
 
   let topicIndex = 1;
 
   for (const rec of records) {
+    const tag = rec.tag || "";
     const phaseId = rec.phase;
     const sectionId = rec.section;
     const topicId = rec.topic;
@@ -105,17 +108,29 @@ function convert(csvFile: string, name: string, description: string, category: s
     }
 
     // ---- トピック登録 ----
-    const topic: Topic = {
-      id: topicId,
-      title: topicId,
-      phaseId,
-      sectionId,
-      extractionPrompt: rec.extractionPrompt || "",
-      status: "pending",
-      error: null,
-      index: topicIndex++,
-    };
-    topics.push(topic);
+    if (!topicMap.has(topicId)) {
+      const topic: Topic = {
+        id: topicId,
+        title: topicId,
+        phaseId,
+        sectionId,
+        extractionPrompt: rec.extractionPrompt || "",
+        status: "pending",
+        error: null,
+        index: topicIndex++,
+        tags: [],
+      };
+      topicMap.set(topicId, topic);
+    }
+
+    // タグの追加
+    if (tag) {
+      const topic = topicMap.get(topicId)!;
+      if (!topic.tags.includes(tag)) {
+        topic.tags.push(tag);
+      }
+      allTags.add(tag);
+    }
   }
 
   // フェーズごとに sections をフラット化し順序保証
@@ -124,6 +139,9 @@ function convert(csvFile: string, name: string, description: string, category: s
     const list = sectionMap.get(phase.id) || [];
     sections.push(...list);
   }
+
+  // トピックをMapから配列に変換
+  const topics = Array.from(topicMap.values());
 
   // ---- テンプレート生成 ----
   const template: Template = {
@@ -136,6 +154,7 @@ function convert(csvFile: string, name: string, description: string, category: s
     topics,
     relations: [],
     reasonings: [],
+    tags: Array.from(allTags).sort(),
   };
 
   return template;
@@ -167,6 +186,7 @@ function main(): void {
   console.log(`  Phases: ${tpl.phases.length}`);
   console.log(`  Sections: ${tpl.sections.length}`);
   console.log(`  Topics: ${tpl.topics.length}`);
+  console.log(`  Tags: ${tpl.tags.length}`);
 }
 
 if (require.main === module) main();
