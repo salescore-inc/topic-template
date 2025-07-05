@@ -1,38 +1,39 @@
-name: Publish to NPM
+name: npm-publish
 
 on:
   push:
-    tags:
-      - 'v*'  # v1.0.0, v1.1.0 などのタグでトリガー
-  workflow_dispatch:  # 手動実行も可能
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - '.npmrc'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-          
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-          
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        
-      - name: Build
-        run: pnpm build
-        
-      - name: Run tests (if any)
-        run: pnpm test --if-present
-        
-      - name: Publish to NPM
-        run: npm publish --access public
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@salescore-inc'
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - run: |
+          pnpm publish --access restricted --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
