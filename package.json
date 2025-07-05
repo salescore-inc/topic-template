@@ -1,6 +1,6 @@
 {
 	"name": "@salescore-inc/topic-template",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "CSV to TopicFlow template converter",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
