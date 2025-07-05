@@ -41,6 +41,18 @@ function generateUUID(): string {
   return randomUUID();
 }
 
+/** 名前からIDへのマッピングを管理するクラス */
+class NameToIdMapper {
+  private nameToIdMap = new Map<string, string>();
+
+  getOrCreateId(name: string): string {
+    if (!this.nameToIdMap.has(name)) {
+      this.nameToIdMap.set(name, generateUUID());
+    }
+    return this.nameToIdMap.get(name)!;
+  }
+}
+
 /** パステルカラーをカテゴリごとに割り当てる簡易ジェネレータ */
 function colorByIndex(i: number): string {
   const palette = [
@@ -74,19 +86,29 @@ function convert(csvFile: string, name: string, description: string, category: s
   const topicMap = new Map<string, Topic>();
   const allTags = new Set<string>();
 
+  // IDマッパーを初期化
+  const phaseMapper = new NameToIdMapper();
+  const sectionMapper = new NameToIdMapper();
+  const topicMapper = new NameToIdMapper();
+
   let topicIndex = 1;
 
   for (const rec of records) {
-    const tag = rec.tag || "";
-    const phaseId = rec.phase;
-    const sectionId = rec.section;
-    const topicId = rec.topic;
+    const tag = rec.tags || "";
+    const phaseName = rec.phase;
+    const sectionName = rec.section;
+    const topicName = rec.topic;
+
+    // IDを生成または取得
+    const phaseId = phaseMapper.getOrCreateId(phaseName);
+    const sectionId = sectionMapper.getOrCreateId(sectionName);
+    const topicId = topicMapper.getOrCreateId(topicName);
 
     // ---- フェーズ登録 ----
     if (!phaseMap.has(phaseId)) {
       const phase: Phase = {
         id: phaseId,
-        name: phaseId,
+        name: phaseName,
         description: "",
         color: colorByIndex(phaseMap.size),
       };
@@ -99,7 +121,7 @@ function convert(csvFile: string, name: string, description: string, category: s
     if (!secArray.find((s) => s.id === sectionId)) {
       const section: Section = {
         id: sectionId,
-        name: sectionId,
+        name: sectionName,
         description: "",
         phaseId,
         index: secArray.length + 1,
@@ -111,10 +133,10 @@ function convert(csvFile: string, name: string, description: string, category: s
     if (!topicMap.has(topicId)) {
       const topic: Topic = {
         id: topicId,
-        title: topicId,
+        title: topicName,
         phaseId,
         sectionId,
-        extractionPrompt: rec.extractionPrompt || "",
+        extractionPrompt: rec.prompt || "",
         status: "pending",
         error: null,
         index: topicIndex++,
