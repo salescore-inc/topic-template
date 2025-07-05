@@ -1,65 +1,98 @@
 # @salescore-inc/topic-template
 
-CSV から TopicFlow テンプレートを生成するCLIツール
+CSV to JSON template converter tool for creating structured "Needs Map" templates. This CLI tool converts CSV data into hierarchical JSON format with phases, sections, and topics.
 
-## インストール
+## Installation
 
+Install globally:
 ```bash
-# または npx で直接実行
-npx topic-template
+npm install -g @salescore-inc/topic-template
 ```
 
-## 使い方
-
+Or use directly with npx:
 ```bash
-npx topic-template <input.csv> <output.json> <name> <description> [category]
+npx @salescore-inc/topic-template
 ```
 
-### 引数
-
-- `input.csv`: 入力CSVファイルのパス
-- `output.json`: 出力JSONファイルのパス
-- `name`: テンプレートの名前
-- `description`: テンプレートの説明
-- `category`: (オプション) テンプレートのカテゴリー（デフォルト: "general"）
-
-### 例
+## Usage
 
 ```bash
-npx topic-template input.csv output.json "採用テンプレート" "採用プロセス用のニーズマップテンプレート" "recruitment"
+topic-template <input.csv> <output.json> <name> <description> [category]
 ```
 
-## CSV フォーマット
+### Arguments
 
-CSVファイルは以下の4つのカラムを持つ必要があります：
+- `input.csv`: Path to the input CSV file
+- `output.json`: Path to the output JSON file  
+- `name`: Template name
+- `description`: Template description
+- `category`: (Optional) Template category (default: "general")
+
+### Example
+
+```bash
+npx @salescore-inc/topic-template input.csv output.json "Recruitment Template" "Needs mapping template for recruitment process" "recruitment"
+```
+
+## CSV Format
+
+The CSV file must have the following 4 columns:
 
 | phase | section | topic | extractionPrompt |
 |-------|---------|-------|------------------|
-| 課題-1 | 母集団形成 | 接点済人数 | 学生が企業と何らかの接点を持った人数について言及している部分を抽出してください |
-| 課題-1 | 母集団形成 | 応募者数 | 実際に応募した学生の人数について言及している部分を抽出してください |
+| Issue-1 | Candidate Pool | Contact Count | Extract mentions of the number of students who had any contact with the company |
+| Issue-1 | Candidate Pool | Applicant Count | Extract mentions of the actual number of students who applied |
 
-- **phase**: 大カテゴリ（フェーズ）
-- **section**: 中カテゴリ（セクション）
-- **topic**: 小カテゴリ（トピック）
-- **extractionPrompt**: 抽出時の判定条件や定義
+- **phase**: Main category (phase)
+- **section**: Sub-category (section)  
+- **topic**: Specific item (topic)
+- **extractionPrompt**: Extraction criteria or definition for data analysis
 
-## 開発
+## Output Structure
+
+The tool generates a structured JSON template with:
+- Hierarchical organization (phases → sections → topics)
+- Auto-generated colors for phases
+- Sequential indexing for sections and topics
+- Metadata including name, description, and category
+
+## Development
+
+This project uses pnpm as the package manager and tsup for building.
 
 ```bash
-# 依存関係のインストール
+# Install dependencies
 pnpm install
 
-# ビルド
+# Build the project
 pnpm build
 
-# 開発モード（ファイル監視）
+# Development mode with file watching
 pnpm dev
+
+# Type checking
+npx tsc --noEmit
+
+# Test the CLI after building
+node dist/index.js
 ```
 
-## ライセンス
+## Project Structure
+
+- `src/index.ts` - Main conversion logic and CLI interface
+- `dist/` - Built output (CJS format for Node.js CLI)
+- Built as standalone executable using tsup bundler
+
+## Dependencies
+
+- `csv-parse` - CSV parsing library
+- TypeScript with strict mode enabled
+- Target: ES2020, Module: ESNext
+
+## License
 
 MIT
 
-## リポジトリ
+## Repository
 
 [https://github.com/salescore-inc/topic-template](https://github.com/salescore-inc/topic-template)
