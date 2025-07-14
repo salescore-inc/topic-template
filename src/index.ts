@@ -73,7 +73,7 @@ export function validateCsvData(csvString: string): ValidationResult {
       }
 
       if (!record["section"] || record["section"].trim() === "") {
-        errors.push(`行${rowNum}: sectionが空です`);
+        warnings.push(`行${rowNum}: sectionが空です（空のセクションとして処理されます）`);
       } else {
         sectionNames.add(record["section"].trim());
       }
@@ -198,6 +198,9 @@ export function convertCsvStringToTemplate(csvString: string, name: string, desc
   const sectionMapper = new NameToIdMapper();
   const topicMapper = new NameToIdMapper();
 
+  // フェーズごとの無名セクションカウンター
+  const unnamedSectionCounters = new Map<string, number>();
+
   let topicIndex = 1;
 
   for (const rec of records) {
@@ -208,7 +211,21 @@ export function convertCsvStringToTemplate(csvString: string, name: string, desc
 
     // IDを生成または取得
     const phaseId = phaseMapper.getOrCreateId(phaseName);
-    const sectionId = sectionMapper.getOrCreateId(sectionName);
+    
+    // セクションIDの生成 - フェーズを考慮した複合キーを使用
+    let sectionKey: string;
+    if (sectionName && sectionName.trim() !== "") {
+      // 名前付きセクションの場合はフェーズ + セクション名
+      sectionKey = `${phaseId}_${sectionName.trim()}`;
+    } else {
+      // 無名セクションの場合はフェーズ + 連番
+      const currentCount = unnamedSectionCounters.get(phaseId) || 0;
+      const nextCount = currentCount + 1;
+      unnamedSectionCounters.set(phaseId, nextCount);
+      sectionKey = `${phaseId}_unnamed_${nextCount}`;
+    }
+    const sectionId = sectionMapper.getOrCreateId(sectionKey);
+    
     const topicId = topicMapper.getOrCreateId(topicName);
 
     // ---- フェーズ登録 ----
@@ -228,7 +245,7 @@ export function convertCsvStringToTemplate(csvString: string, name: string, desc
     if (!secArray.find((s) => s.id === sectionId)) {
       const section: Section = {
         id: sectionId,
-        name: sectionName,
+        name: sectionName || "",
         description: "",
         phaseId,
         index: secArray.length + 1,
